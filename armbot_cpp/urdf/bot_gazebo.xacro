@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<!--this node is used to interface the ros2control libary and gazebo-->
+
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="armbot_cpp">
+
+    <!-- Gazebo ros2_control plugin -->
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <robot_param>robot_description</robot_param>
+        <robot_param_node>robot_state_publisher</robot_param_node>
+        <parameters>$(find bot_controller)/config/bot_controllers.yaml</parameters>
+      </plugin>
+    </gazebo>
+
+</robot>      

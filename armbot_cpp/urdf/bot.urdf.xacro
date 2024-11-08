@@ -1,0 +1,264 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name = "armbot">
+
+    <xacro:include filename="$(find armbot_cpp)/urdf/bot_gazebo.xacro"/>
+
+    <xacro:include filename="$(find armbot_cpp)/urdf/bot_ros2_control.xacro"/>
+
+    <material name ="blue">
+        <color rgba = "0 0 1 1"/>
+    </material>
+
+    <material name ="green">
+        <color rgba = "0 1 0 1"/>
+    </material>
+
+    <material name ="new">
+        <color rgba = "0 0.6 0.6 1"/>
+    </material>
+            
+    <xacro:property name ="PI" value ="3.14159"/>
+    
+    <xacro:property name="effort" value="30.0"/>  <!-- max torque that revolute joint(Newton per meter) representing torque  (for prismatic joint newton representing force)-->
+    <xacro:property name ="velocity" value ="10.0"/>  <!-- max unit it can move per sec. for revolute joint (rad/sec) f0r prismatic joint (m/s)-->
+
+
+    <xacro:macro name="default_inertial" params="mass ixx iyy izz ixy ixz iyz">
+        <inertial>
+        <mass value="${mass}"/>
+        <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}"
+                 iyy="${iyy}" iyz="${iyz}"
+                 izz="${izz}" />
+        </inertial>
+    </xacro:macro>
+
+    
+    
+    <xacro:macro name ="default_transmission" params="number">
+        <transmission name="transmission_${number}">
+                <plugin>transmission_interface/SimpleTransmission</plugin>
+                <actuator name="motor_${number}" role="actuator1"/>
+                <joint name="joint_${number}" role="joint1"/> <!-- Corrected here -->
+                <mechanical_reduction>1.0</mechanical_reduction>
+        </transmission>
+    </xacro:macro>
+        
+
+
+
+
+    <link name="world"/>
+
+     <!--    joint 0-->
+
+
+    <link name="base_link">
+        <xacro:default_inertial mass="1.0" ixx="1.0" iyy="1.0" izz="1.0" ixy="0.0" ixz="0.0" iyz="0.0"/>
+        <visual>
+            <origin rpy ="0 0 0" xyz ="-0.5 -0.5  0"/>
+            <geometry>
+                <mesh filename ="package://armbot_cpp/meshes/basement.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy ="0 0 0" xyz ="-0.5 -0.5  0"/>
+            <geometry>
+                <mesh filename ="package://armbot_cpp/meshes/basement.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+        
+    </link>
+    
+    
+
+    <joint name ="virtual_joint" type="fixed">
+        <parent link="world"/>
+        <child link ="base_link"/>
+        <origin rpy ="0 0 0" xyz="0 0 0"/>
+    </joint>
+
+
+     <!--    joint 1-->
+
+    <link name ="base_plate">
+        <xacro:default_inertial mass="0.1" ixx="1.0" iyy="1.0" izz="1.0" ixy="0.0" ixz="0.0" iyz="0.0" />
+        <visual>
+            <origin rpy="0 0 0" xyz="-0.39 -0.39 -0.56"/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/base_plate.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="-0.39 -0.39 -0.56"/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/base_plate.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="joint_1" type="revolute">
+        <parent link ="base_link"/>
+        <child link="base_plate"/>
+        <axis xyz ="0 0 1"/>     <!-- axis which the link will move-->
+        <origin rpy="0 0 0" xyz="0 0 0.307"/>   <!-- angle and length from which base_first_joint is mounted on the base link-->
+        <limit lower ="-${PI/2}" upper="${PI/2}" effort="${effort}" velocity="${velocity}"/>   <!-- lower and upper are the max and min angle it can rotate with using the limit tag which has constriants of the bot-->
+    </joint>
+
+
+    <!--    joint 2-->
+
+    <link name ="forward_drive_arm">
+        <xacro:default_inertial mass="0.1" ixx="1.0" iyy="1.0" izz="1.0" ixy="0.0" ixz="0.0" iyz="0.0"/>
+        <visual>
+            <origin rpy="0 -${PI/2} ${PI/2}" xyz="0.19 0.06 -0.08 "/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/forward_drive_arm.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <origin rpy="0 -${PI/2} ${PI/2}" xyz="0.19 0.06 -0.08 "/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/forward_drive_arm.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+
+    </link>
+
+    <joint name="joint_2" type="revolute">
+        <parent link ="base_plate"/>
+        <child link="forward_drive_arm"/>
+        <axis xyz ="1 0 0"/>     <!-- axis which the link will move-->
+        <origin rpy="0 0 0" xyz="-0.02 0 0.35"/>   <!-- angle and length from which base_first_joint is mounted on the base link-->
+        <limit lower ="-${PI/2}" upper="${PI/2}" effort="${effort}" velocity="${velocity}"/>   <!-- lower and upper are the max and min angle it can rotate with using the limit tag which has constriants of the bot-->
+
+    </joint>
+
+
+    <!--    joint 3-->  
+
+    <link name ="horizontal_arm">
+        <xacro:default_inertial mass="0.1" ixx="1.0" iyy="1.0" izz="1.0" ixy="0.0" ixz="0.0" iyz="0.0" />
+        <visual>
+            <origin rpy="${PI/2} 0 ${PI/2}" xyz="-0.03 -0.4 -0.06 "/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/horizontal_arm.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="${PI/2} 0 ${PI/2}" xyz="-0.03 -0.4 -0.06 "/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/horizontal_arm.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="joint_3" type="revolute">
+        <parent link ="forward_drive_arm"/>
+        <child link="horizontal_arm"/>
+        <axis xyz ="1 0 0"/>     <!-- axis which the link will move-->
+        <origin rpy="0 0 0" xyz="0 0 0.8"/>   <!-- angle and length from which base_first_joint is mounted on the base link-->
+        <limit lower ="-${PI/2}" upper="${PI/2}" effort="${effort}" velocity="${velocity}"/>   <!-- lower and upper are the max and min angle it can rotate with using the limit tag which has constriants of the bot-->
+
+    </joint>
+
+
+    <!--    joint 4-->
+
+ 
+
+    <joint name="claw_" type="fixed">
+        <parent link ="horizontal_arm"/>
+        <child link="claw_support"/>
+        <origin rpy="0 0 0" xyz="0 0.82 0"/>   <!-- angle and length from which base_first_joint is mounted on the base link-->
+    </joint>
+
+    <link name="claw_support">
+        <xacro:default_inertial mass="0.05"  ixx="1.0" iyy="1.0" izz="1.0" ixy="0.0" ixz="0.0" iyz="0.0"/>
+        <visual>
+            <origin rpy="0 0 ${PI / 2}" xyz="0 -0.05 -0.15"/>
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/claw_support.STL" scale="0.01 0.01 0.01"/>
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin rpy="0 0 ${PI / 2}" xyz="0 -0.05 -0.15"/>
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/claw_support.STL" scale="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+
+    <!--    joint 5 and 6-->
+
+    <link name ="gripper_right">
+        <xacro:default_inertial mass="0.01" ixx="1.0" iyy="1.0" izz="1.0" ixy="0.0" ixz="0.0" iyz="0.0"/>
+        <visual>
+            <origin rpy="0 0 -${PI/2}" xyz="-0.1 0.5 -0.1 "/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/right_finger.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 -${PI/2}" xyz="-0.1 0.5 -0.1 "/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/right_finger.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+
+    <link name ="gripper_left">
+        <xacro:default_inertial mass="0.01"  ixx="1.0" iyy="1.0" izz="1.0" ixy="0.0" ixz="0.0" iyz="0.0"/>
+        <visual>
+            <origin rpy="0 0 -${PI/2}" xyz="-0.04 0.5 -0.1"/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/left_finger.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <origin rpy="0 0 -${PI/2}" xyz="-0.04 0.5 -0.1"/>  <!-- angle and length to be fixed for the 3d model using visual tag-->
+            <geometry>
+                <mesh filename="package://armbot_cpp/meshes/left_finger.STL" scale ="0.01 0.01 0.01"/>
+            </geometry>
+        </collision>
+    </link>
+
+
+    <joint name="joint_4" type="revolute">
+        <parent link ="claw_support"/>
+        <child link="gripper_right"/>
+        <axis xyz ="0 0 1"/>     <!-- axis which the link will move-->
+        <origin rpy="0 0 0" xyz="-0.04 0.13 -0.1"/>   <!-- angle and length from which base_first_joint is mounted on the base link-->
+        <limit lower ="-${PI/2}" upper="0.0" effort="${effort}" velocity="${velocity}"/>   <!-- lower and upper are the max and min angle it can rotate with using the limit tag which has constriants of the bot-->
+
+    </joint>
+    
+    <joint name="joint_5" type="revolute">
+        <parent link ="claw_support"/>
+        <child link="gripper_left"/>
+        <axis xyz ="0 0 1"/>     <!-- axis which the link will move-->
+        <origin rpy="0 0 0" xyz="-0.22 0.13 -0.1"/>   <!-- angle and length from which base_first_joint is mounted on the base link-->
+        <mimic joint="joint_4" multiplier="-1"/>
+        <limit lower ="0.0" upper="${PI/2}" effort="${effort}" velocity="${velocity}"/>   <!-- lower and upper are the max and min angle it can rotate with using the limit tag which has constriants of the bot-->
+    </joint>
+
+    <!-- joint 7-->
+
+
+    <!--transmission of motor for four movable joints and  thus each movable joint has rech transmission-->
+
+    <xacro:default_transmission number="1"/>
+    <xacro:default_transmission number="2"/>
+    <xacro:default_transmission number="3"/>
+    <xacro:default_transmission number="4"/> 
+
+
+
+       
+
+</robot>            
