@@ -1,0 +1,10 @@
+# Goal definition
+int32 order
+
+---
+# Result definition
+int32 success
+
+---
+# Feedback definition
+float32 progress
