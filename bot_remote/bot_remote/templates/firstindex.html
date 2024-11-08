@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask INtelli ARM</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #333;
+            margin-bottom: 0.2em;
+        }
+
+        h2 {
+            margin-top: 0.5em;
+            font-size: 1.5em;
+        }
+
+        p {
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        input[type="text"] {
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            width: 600px;
+            font-size: 1.1em;
+            margin-top: 2em;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="text"]::placeholder {
+            color: #ccc;
+        }
+
+        #robot-image {
+            width: 200px; /* Adjust size as needed */
+            height: auto;
+            margin-top: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chat with INTELLI ARM</h1>
+
+        <img id="robot-image" src="/static/img.png" alt="Robot Image">
+
+        <h2>Interact with Intelli Arm</h2>
+
+        <p>Send the commands for the robot</p>
+        <input type="text" id="user_input" placeholder="Send commands to the bot..">
+    </div>
+
+    <script>
+        // Capture Enter key press and send input
+        $('#user_input').on('keypress', function(event) {
+            if (event.which === 13) {  // 13 is the Enter key
+                sendInput();
+            }
+        });
+
+        function sendInput() {
+            var user_input = $('#user_input').val();
+
+            if (user_input.trim() !== "") {
+                $.ajax({
+                    url: '/process_input', // Replace with actual endpoint
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ user_input: user_input }),
+                    success: function(response) {
+                        alert("Hey vijay, I'm moving to the goal pose: " + response.task); // Modify based on your need
+                    },
+                    error: function(error) {
+                        alert("Error: " + error.responseJSON.message);
+                    }
+                });
+
+                // Clear the input field
+                $('#user_input').val('');
+            }
+        }
+    </script>
+
+</body>
+</html>
